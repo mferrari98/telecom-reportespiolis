@@ -9,6 +9,16 @@ const { sindet } = require("./etl");
 
 const ID_MOD = "TRANS";
 
+function escapeHtml(str) {
+  if (typeof str !== "string") return String(str ?? "");
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function escapeJsString(str) {
+  if (typeof str !== "string") return String(str ?? "");
+  return str.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/</g, "\\x3c");
+}
+
 const { reportTemplate, reportHtml, reportData, echartsSrc, echartsDest } = config.paths;
 
 async function transpilar(reporte, estampatiempo) {
@@ -51,11 +61,11 @@ function expandirPlantilla(reporte, data) {
 
 function sustituirMarcas(reporte, estampatiempo, contenido) {
   contenido = contenido
-    .replaceAll("<!-- ESTAMPATIEMPO -->", fechaLegible(estampatiempo))
-    .replaceAll("<!-- HEADER_0 -->", reporte[0].variable.nivel.descriptor)
-    .replaceAll("<!-- HEADER_1 -->", reporte[0].variable.cloro.descriptor)
-    .replaceAll("<!-- HEADER_2 -->", reporte[0].variable.turbiedad.descriptor)
-    .replaceAll("<!-- HEADER_3 -->", reporte[0].variable.voldia.descriptor);
+    .replaceAll("<!-- ESTAMPATIEMPO -->", escapeHtml(fechaLegible(estampatiempo)))
+    .replaceAll("<!-- HEADER_0 -->", escapeHtml(reporte[0].variable.nivel.descriptor))
+    .replaceAll("<!-- HEADER_1 -->", escapeHtml(reporte[0].variable.cloro.descriptor))
+    .replaceAll("<!-- HEADER_2 -->", escapeHtml(reporte[0].variable.turbiedad.descriptor))
+    .replaceAll("<!-- HEADER_3 -->", escapeHtml(reporte[0].variable.voldia.descriptor));
 
   reporte.forEach((item, i) => {
     const nivelValor = item.variable.nivel.valor;
@@ -68,7 +78,7 @@ function sustituirMarcas(reporte, estampatiempo, contenido) {
     const cloroAlert = item.sitio === "P.Pot" && cloroValor < 1;
 
     contenido = contenido
-      .replace(`SITIO_${i}`, item.sitio)
+      .replace(`SITIO_${i}`, escapeHtml(item.sitio))
       .replace(
         `NIVEL_${i}`,
         nivelValor === undefined
@@ -93,7 +103,7 @@ function sustituirMarcas(reporte, estampatiempo, contenido) {
   });
 
   contenido = contenido
-    .replaceAll("<!-- SITIOS -->", reporte.map((objeto) => `'${objeto.sitio}'`))
+    .replaceAll("<!-- SITIOS -->", reporte.map((objeto) => `'${escapeJsString(objeto.sitio)}'`))
     .replaceAll(
       "<!-- NIVELES -->",
       reporte.map((objeto) =>

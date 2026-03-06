@@ -53,7 +53,7 @@ const DEFAULTS = {
   report: {
     historico: {
       defaultLimit: 48,
-      maxLimit: 200000
+      maxLimit: 5000
     },
     webUrl: "https://10.10.9.250/reporte"
   },
